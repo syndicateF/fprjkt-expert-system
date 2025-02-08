@@ -4,7 +4,7 @@ _pycache_
 *.pyc
 *.pyo
 .env
-janban hapus.txt
+janbksan hapus.txt
 fprjkt/base copy.html
 fprjkt/main/dataset.py.txt
 fprjkt/main/html/conflicts copy.html
