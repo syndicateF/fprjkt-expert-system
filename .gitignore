@@ -5,3 +5,11 @@ _pycache_
 *.pyo
 .env
 jamban hapus.txt
+fprjkt/base copy.html
+fprjkt/main/dataset.py.txt
+fprjkt/main/html/conflicts copy.html
+fprjkt/main/html/home copy.html
+fprjkt/main/otak copy.py.txt
+fprjkt/routes copy.py.txt
+static/JavaScripts/style copy.js
+static/css/style copy.css
