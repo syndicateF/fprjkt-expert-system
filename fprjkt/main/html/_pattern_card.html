@@ -1,0 +1,32 @@
+<div class="pattern-card">
+    <div class="pattern-header">
+        <span class="pattern-label">{{ pattern.label }}</span>
+        <span class="pattern-type">{{ pattern.type }}</span>
+    </div>
+    
+    <div class="pattern-body">
+        <p class="pattern-desc">{{ pattern.description }}</p>
+        
+        {% if pattern.type == "Daftar Kata" %}
+        <div class="pattern-examples">
+            <h4>Contoh:</h4>
+            <div class="example-list">
+                {% for example in pattern.examples %}
+                <span class="example-tag">{{ example }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="pattern-regex">
+            <h4>Pola RegEx:</h4>
+            <code>{{ pattern.examples[0] }}</code>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if result and result.log.matched_patterns %}
+    <div class="pattern-stats">
+        Ditemukan: {{ result.log.matched_patterns|selectattr('1', 'equalto', pattern.label)|list|length }} kali
+    </div>
+    {% endif %}
+</div>

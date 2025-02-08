@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% block title %}Konflik{% endblock %}
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% for fajrin in semua_konflik %}
+        <div class="conflict-wrap">
+            <!-- nama -->
+            <h1 class="conflict-id">#{{ fajrin.id }}</h1>
+            <div class="conflict-content">
+                <div class="conflict-nama-wrap">
+                    <div>
+                        <span>Nama konflik :</span>
+                        <span id="conflict-nama-display-{{ fajrin.id }}">{{ fajrin.name }}</span>
+                    </div>
+                    <button type="button" onclick="openEditModal('nama', {{ fajrin.id }})">Edit</button>
+                </div>
+
+                <div id="modal-nama-{{ fajrin.id }}" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeEditModal('nama', {{ fajrin.id }})">&times;</span>
+                        <h4>Edit Nama Konflik</h4>
+                        <form id="form-modal-nama-{{ fajrin.id }}"
+                            onsubmit="event.preventDefault(); updateContent('nama', {{ fajrin.id }});">
+                            <textarea id="input-nama-{{ fajrin.id }}" name="nama" placeholder="Nama Konflik" class="example-input"
+                                required>
+                                    {{ fajrin.name }}
+                                </textarea>
+                            <div class="modal-actions">
+                                <button class="btn-save" type="submit">
+                                    💾 Simpan Perubahan
+                                </button>
+                                <button class="btn-cancel" type="button" onclick="handleCancel('nama', {{ fajrin.id }})">
+                                    ❌ Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- saran -->
+                <div style="background-color: red;">
+                    <p>
+                        Saran :
+                        <span id="conflict-saran-display-{{ fajrin.id }}">{{ fajrin.saran }}</span>
+                        <button type="button" onclick="openEditModal('saran', {{ fajrin.id }})">Edit</button>
+                    </p>
+                </div>
+
+                <div id="modal-saran-{{ fajrin.id }}" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeEditModal('saran', {{ fajrin.id }})">&times;</span>
+                        <h4>Edit Saran</h4>
+                        <form id="form-modal-saran-{{ fajrin.id }}"
+                            onsubmit="event.preventDefault(); updateContent('saran', {{ fajrin.id }});">
+                            <textarea class="example-input" id="input-saran-{{ fajrin.id }}" name="saran"
+                                placeholder="Masukkan saran" rows="4" required>{{ fajrin.saran }}</textarea>
+                            <div class="modal-actions">
+                                <button class="btn-save" type="submit">
+                                    💾 Simpan Perubahan
+                                </button>
+                                <button class="btn-cancel" type="button" onclick="handleCancel('saran', {{ fajrin.id }})">
+                                    ❌ Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- example -->
+                <div class="" data-conflict-id="{{ fajrin.id }}">
+                    <div class="example-header">
+                        <p>Examples untuk Konflik: {{ fajrin.name }}</p>
+                        <button class="btn-add" onclick="openExampleModal('example','new', {{ fajrin.id }})">
+                            + Tambah Example
+                        </button>
+                    </div>
+                    <ul class="example-list">
+                        {% for example in fajrin.examples %}
+                            <li id="example-{{ fajrin.id }}-{{ example.id }}">
+                                <div class="content" id="example-content-{{ fajrin.id }}-{{ example.id }}">
+                                    {{ example.content }}
+                                </div>
+                                <div class="actions">
+                                    <button class="btn-edit" onclick="openExampleModal('example',{{ example.id }}, {{ fajrin.id }})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn-delete"
+                                        onclick="confirmDeleteExample('example',{{ example.id }}, {{ fajrin.id }})">
+                                        🗑️ Hapus
+                                    </button>
+                                </div>
+                            </li>
+                            <!-- modal edit -->
+                            <div id="example-modal-{{ fajrin.id }}-{{ example.id }}" class="example-modal modal">
+                                <div class="modal-content">
+                                    <span class="close" onclick="handleCloseExampleModal('example',{{ fajrin.id }}, {{ example.id }})">
+                                        &times;
+                                    </span>
+                                    <h4>Edit Example</h4>
+                                    <textarea id="example-input-{{ fajrin.id }}-{{ example.id }}" class="example-input"
+                                        placeholder="Masukkan konten example...">{{ example.content }}</textarea>
+                                    <div class="modal-actions">
+                                        <button class="btn-save"
+                                            onclick="handleExampleSubmit('example',{{ fajrin.id }}, {{ example.id }})">
+                                            💾 Simpan Perubahan
+                                        </button>
+                                        <button class="btn-cancel"
+                                            onclick="handleCloseExampleModal('example',{{ fajrin.id }}, {{ example.id }})">
+                                            ❌ Batal
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <!-- modal tambah example -->
+                        <div id="example-modal-{{ fajrin.id }}-new" class="example-modal modal">
+                            <div class="modal-content">
+                                <span class="close" onclick="handleCloseExampleModal('example',{{ fajrin.id }}, 'new')">
+                                    &times;
+                                </span>
+                                <h4>Tambah Example Baru</h4>
+                                <textarea id="example-input-{{ fajrin.id }}-new" class="example-input"
+                                    placeholder="Masukkan konten example..."></textarea>
+                                <div class="modal-actions">
+                                    <button class="btn-save" onclick="handleExampleSubmit('example',{{ fajrin.id }}, 'new')">
+                                        💾 Simpan
+                                    </button>
+                                    <button class="btn-cancel" onclick="handleCloseExampleModal('example',{{ fajrin.id }}, 'new')">
+                                        ❌ Batal
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </ul>
+                </div>
+                <!-- solusi -->
+                <div class="" data-conflict-id="{{ fajrin.id }}">
+                    <div class="solusi-header">
+                        <strong>Solusi untuk Konflik: {{ fajrin.name }}</strong>
+                        <button class="btn-add" onclick="openExampleModal('solusi','new', {{ fajrin.id }})">
+                            + Tambah Solusi
+                        </button>
+                    </div>
+                    <ul class="solusi-list">
+                        {% for solusi in fajrin.solutions %}
+                            <li id="solusi-{{ fajrin.id }}-{{ solusi.id }}">
+                                <div class="content" id="solusi-content-{{ fajrin.id }}-{{ solusi.id }}">
+                                    {{ solusi.content }}
+                                </div>
+                                <div class="actions">
+                                    <button class="btn-edit" onclick="openExampleModal('solusi',{{ solusi.id }}, {{ fajrin.id }})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn-delete"
+                                        onclick="confirmDeleteExample('solusi',{{ solusi.id }}, {{ fajrin.id }})">
+                                        🗑️ Hapus
+                                    </button>
+                                </div>
+                            </li>
+                            <!-- modal edit solusi -->
+                            <div id="solusi-modal-{{ fajrin.id }}-{{ solusi.id }}" class="solusi-modal modal">
+                                <div class="modal-content">
+                                    <span class="close" onclick="handleCloseExampleModal('solusi',{{ fajrin.id }}, {{ solusi.id }})">
+                                        &times;
+                                    </span>
+                                    <h4>Edit Solusi</h4>
+                                    <textarea id="solusi-input-{{ fajrin.id }}-{{ solusi.id }}" class="solusi-input"
+                                        placeholder="Masukkan konten solusi...">{{ solusi.content }}</textarea>
+
+                                    <div class="modal-actions">
+                                        <button class="btn-save"
+                                            onclick="handleExampleSubmit('solusi',{{ fajrin.id }}, {{ solusi.id }})">
+                                            💾 Simpan Perubahan
+                                        </button>
+                                        <button class="btn-cancel"
+                                            onclick="handleCloseExampleModal('solusi',{{ fajrin.id }}, {{ solusi.id }})">
+                                            ❌ Batal
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <!-- modal tambah solusi-->
+                        <div id="solusi-modal-{{ fajrin.id }}-new" class="solusi-modal modal">
+                            <div class="modal-content">
+                                <span class="close" onclick="handleCloseExampleModal('solusi',{{ fajrin.id }}, 'new')">
+                                    &times;
+                                </span>
+                                <h4>Tambah Solusi Baru</h4>
+                                <textarea id="solusi-input-{{ fajrin.id }}-new" class="solusi-input"
+                                    placeholder="Masukkan konten solusi..."></textarea>
+
+                                <div class="modal-actions">
+                                    <button class="btn-save" onclick="handleExampleSubmit('solusi',{{ fajrin.id }}, 'new')">
+                                        💾 Simpan
+                                    </button>
+                                    <button class="btn-cancel" onclick="handleCloseExampleModal('solusi',{{ fajrin.id }}, 'new')">
+                                        ❌ Batal
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </ul>
+                </div>
+                <div>
+                    <!-- relasi -->
+                    {% for relation_type in ['cause', 'depends_on', 'resolve'] %}
+                        <div class="relation-group" data-conflict-id="{{ fajrin.id }}">
+                            <div class="relation-header">
+                                <strong>{{ relation_type.replace('_', ' ').title() }}</strong>
+                                <button class="btn-add" onclick="openExampleModal('{{ relation_type }}','new', {{ fajrin.id }})">
+                                    + Tambah {{ relation_type.replace('_', ' ').title() }}
+                                </button>
+                            </div>
+                            <ul class="relation-list">
+                                {% for relation in fajrin.relations_by_type[relation_type] %}
+                                    <li id="{{ relation_type }}-{{ fajrin.id }}-{{ relation.id }}">
+                                        <div class="content" id="{{ relation_type }}-content-{{ fajrin.id }}-{{ relation.id }}">
+                                            {{ relation.content }}
+                                        </div>
+                                        <div class="actions">
+                                            <button class="btn-edit"
+                                                onclick="openExampleModal('{{ relation_type }}',{{ relation.id }}, {{ fajrin.id }})">
+                                                ✏️ Edit
+                                            </button>
+                                            <button class="btn-delete"
+                                                onclick="confirmDeleteExample('{{ relation_type }}',{{ relation.id }}, {{ fajrin.id }})">
+                                                🗑️ Hapus
+                                            </button>
+                                        </div>
+                                    </li>
+
+                                    <!-- Modal Edit -->
+                                    <div id="{{ relation_type }}-modal-{{ fajrin.id }}-{{ relation.id }}" class="relation-modal modal">
+                                        <div class="modal-content">
+                                            <span class="close"
+                                                onclick="handleCloseExampleModal('{{ relation_type }}',{{ fajrin.id }}, {{ relation.id }})">
+                                                &times;
+                                            </span>
+                                            <h4>Edit {{ relation_type.replace('_', ' ').title() }}</h4>
+                                            <textarea id="{{ relation_type }}-input-{{ fajrin.id }}-{{ relation.id }}"
+                                                class="relation-input" placeholder="Masukkan konten...">{{ relation.content }}</textarea>
+                                            <div class="modal-actions">
+                                                <button class="btn-save"
+                                                    onclick="handleExampleSubmit('{{ relation_type }}',{{ fajrin.id }}, {{ relation.id }})">
+                                                    💾 Simpan
+                                                </button>
+                                                <button class="btn-cancel"
+                                                    onclick="handleCloseExampleModal('{{ relation_type }}',{{ fajrin.id }}, {{ relation.id }})">
+                                                    ❌ Batal
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+
+                                <!-- Modal Tambah Baru -->
+                                <div id="{{ relation_type }}-modal-{{ fajrin.id }}-new" class="relation-modal modal">
+                                    <div class="modal-content">
+                                        <span class="close"
+                                            onclick="handleCloseExampleModal('{{ relation_type }}',{{ fajrin.id }}, 'new')">
+                                            &times;
+                                        </span>
+                                        <h4>Tambah {{ relation_type.replace('_', ' ').title() }} Baru</h4>
+                                        <textarea id="{{ relation_type }}-input-{{ fajrin.id }}-new" class="relation-input"
+                                            placeholder="Masukkan konten..."></textarea>
+                                        <div class="modal-actions">
+                                            <button class="btn-save"
+                                                onclick="handleExampleSubmit('{{ relation_type }}',{{ fajrin.id }}, 'new')">
+                                                💾 Simpan
+                                            </button>
+                                            <button class="btn-cancel"
+                                                onclick="handleCloseExampleModal('{{ relation_type }}',{{ fajrin.id }}, 'new')">
+                                                ❌ Batal
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ul>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- hapus konf -->
+            <form action="{{ url_for('fprjkt.hapus_konflik', id_konflik=fajrin.id) }}" method="POST">
+                <button type="submit">hapus</button>
+            </form>
+            <hr>
+        </div>
+    {% endfor %}
+
+
+    <div id="modal-confirm-cancel" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeConfirmCancelModal()">&times;</span>
+            <h4>Yakin tidak menyimpan perubahan?</h4>
+            <div class="confirm-actions">
+                <button type="button" class="btn-confirm-yes" onclick="confirmCancel()">Ya,
+                    Batalkan</button>
+                <button type="button" class="btn-confirm-no" onclick="closeConfirmCancelModal()">Tetap
+                    Edit</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="global-confirm-modal" class="modal">
+        <div class="modal-content">
+            <p id="confirm-message">I LOVE PDAM</p>
+            <div class="confirm-actions">
+                <button id="confirm-yes" class="btn-confirm-yes">Ya</button>
+                <button id="confirm-no" class="btn-confirm-no">Tidak</button>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

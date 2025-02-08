@@ -1,0 +1,7 @@
+v/
+_pycache_
+*.log
+*.pyc
+*.pyo
+.env
+jamban hapus.txt

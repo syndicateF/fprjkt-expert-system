@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Tambah Konflik{% endblock %}
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+    <form id="main-form" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" name="conflict_id" id="conflict_id" value="{{ conflict_id if conflict_id else '' }}">
+        
+        <label>Nama Konflik:</label> <br>
+        <input type="text" id="name" name="name" required>
+        <br>
+    
+        <label>Saran:</label> <br>
+        <textarea id="saran" name="saran"></textarea>
+        <br>
+    
+        <label>Contoh:</label>
+        <div id="example-container">
+            <textarea name="examples[]" placeholder="Example 1" required></textarea>
+        </div>
+        <button type="button" onclick="addExample()">tambah</button>
+        <br>
+    
+        <label>Solusi:</label>
+        <div id="solution-container">
+            <textarea name="solutions[]" placeholder="Solution 1" required></textarea>
+        </div>
+        <button type="button" onclick="addSolution()">tambah</button>
+        <br>
+    
+        <div id="relation-container">
+            <label>Relasi:</label> <br>
+            
+            <!-- caus -->
+            <label>Cause:</label>
+            <div id="cause-container">
+                <textarea name="cause[]" placeholder="Cause" required></textarea>
+            </div>
+            <button type="button" onclick="addCause()">tambah</button>
+            <br>
+        
+            <!-- depens on -->
+            <label>Depends on:</label>
+            <div id="depends-on-container">
+                <textarea name="depends_on[]" placeholder="Depends On" required></textarea>
+            </div>
+            <button type="button" onclick="addDependsOn()">tambah</button>
+            <br>
+        
+            <!-- resolve -->
+            <label>Resolve:</label>
+            <div id="resolve-container">
+                <textarea name="resolve[]" placeholder="Resolve" required></textarea>
+            </div>
+            <button type="button" onclick="addResolve()">tambah</button>
+            <br>
+        </div>
+    
+        <button type="submit">gas</button>
+    </form>
+{% endblock %}

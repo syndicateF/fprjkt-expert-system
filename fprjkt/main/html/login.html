@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+    <div>
+        <form action="/login" method="POST">
+            <input type="text" name="username" placeholder="Username">
+            <input type="text" name="password" placeholder="Password">
+            <button type="submit">GAS</button>
+        </form>
+        <div class="login-popup-container">
+            <a href="/login" class="trigger-popup" style="color: white; text-decoration: none;">Login</a>
+            <div id="login-popup" class="popup">
+                <div class="popup-content">
+                    <form id="login-form">
+                        <input type="text" name="username" id="username" placeholder="Username" autocomplete="off" required>
+                        <span id="username-error" class="error-message"></span>
+                        <input type="password" name="password" id="password" placeholder="Password" autocomplete="off" required>
+                        <span id="password-error" class="error-message"></span>
+                        <button type="button" onclick="handleLogin()">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

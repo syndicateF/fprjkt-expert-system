@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Riwayat{% endblock %}
+{% block content %}
+<div>
+    <div class="riwayat_grid">
+        {% for arya in riwayat %}
+        <div class="riwayat_card">
+            <div class="riwayat_header">
+                <span class="riwayat_id">#{{ arya.id }}</span>
+                <h2 class="riwayat_masalah">{{ arya.masalah }}</h2>
+            </div>
+            <p class="riwayat_solusi">{{ arya.solusi }}</p>
+            <div class="riwayat_footer">
+                <span class="riwayat_kepastian">Kepastian: {{ arya.kepastian }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

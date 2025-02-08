@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+<!-- flex -->
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div>
+        {% if not result %}
+            <div class="base_container2">
+                <div class="base_container21">
+                    <div class="base_container2_item1">
+                        <h1>{{ dataset }}</h1>
+                        <p>Jumlah Data</p>
+                    </div>
+                    <div class="base_container2_item2">
+                        <h1>Title</h1>
+                        <p>Summary</p>
+                    </div>
+                    <div class="base_container2_item3">
+                        <h1>Title</h1>
+                        <p>Summary</p>
+                    </div>
+                    <div class="base_container2_item4">
+                        <h1>Title</h1>
+                        <p>Summary</p>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: center; align-items: center; padding-bottom: 20px;">
+                    <img src="{{ url_for('static', filename='img/banner.png') }}" alt="gambar" style="width: 250px; margin-right: 20px;">
+                    <div class="base_container3">
+                        <h2>✨ Hey Kamu, Yes Kamu! ✨</h2>
+                        <h2>Selamat Datang di Zona Solusi! 🚀</h2>
+                        <p><strong>Organisasi kamu ada masalah? Santai,</strong> <br> 
+                        Kita siap bantu cari solusi terbaik buat nyelesain konflikmu 💡.</p>
+                    </div>
+                </div>
+            </div>
+                
+                
+        {% endif %}
+        <form class="area_container" method="POST">
+            <div style="padding: 10px;">
+                <textarea name="apa" id="apa" placeholder="Apa masalahta" oninput="autoResize(this)" required></textarea>
+                <button type="submit">🔍 Cari Solusi</button>
+            </div>
+        </form>
+
+
+{% if result %}
+    <div class="results-section">
+
+        {% if result.warning %}
+            <div class="warning-box">
+                <h3>⚠ {{ result.warning.title }}</h3>
+                <p>{{ result.warning.message }}</p>
+                
+                {% if result.warning.suggestions %}
+                <div class="suggestions">
+                    <h4>Saran:</h4>
+                    <ul>
+                        {% for suggestion in result.warning.suggestions %}
+                        <li>{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if result.warning.examples %}
+                    <div class="examples">
+                        <h4>Contoh Input Valid:</h4>
+                        <ul>
+                            {% for example in result.warning.examples %}
+                            <li>{{ example }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if result.error %}
+            <div class="error-alert">
+                <h3>❌ Error Sistem</h3>
+                <p>{{ result.error }}</p>
+                <p>Silakan coba input yang berbeda atau hubungi admin</p>
+            </div>
+        {% endif %}
+
+
+        {% if result.conflicts %}
+
+
+
+        <div class="debug-section">
+            <h3>📊 Berdasarkan dari analisis system</h3>
+            <div class="log-section">
+                <h4>Input yang Diproses:</h4>
+                <p>{{ result.log.processed_input }}</p>
+                
+                <h4>Kata Kunci Terdeteksi:</h4>
+                <div>
+                    {% for keyword in result.log.keywords_found %}
+                    <span class="keyword-tag">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+                
+                <h4>Kecocokan Dependensi:</h4>
+                <ul>
+                    {% for match in result.log.dependency_matches %}
+                    <li>{{ match }}</li>
+                    {% endfor %}
+                </ul>
+                <h4>Kecocokan Pola:</h4>
+                {% if result and result.log.matched_patterns %}
+                    <div class="matches-section">
+                        <h4>Analisa NER</h4>
+                        
+                        <div class="matches-grid">
+                            {% for entity, label in result.log.matched_patterns %}
+                                <div class="match-card">
+                                    <div class="entity-label">{{ label }}</div>
+                                    <div class="entity-text">{{ entity }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+            <div class="conflict-results">
+
+                <h2>Hasil Analisis system</h2>
+
+                {% for conflict in result.conflicts %}
+
+
+
+
+                    <div class="conflict-card">
+                        <h3>{{ conflict.name }} <span class="solution-score">{{ "%.2f"|format(conflict.score) }}</span></h3>
+
+                            
+                        <div class="calculation-formula">
+                            Skor Final = (
+                                {{ "%.2f"|format(conflict.base_sim|default(0)) }} + 
+                                {{ "%.2f"|format(conflict.entity_boost|default(0)) }}
+                            )
+                            {% if conflict.relation_weight|default(1.0) != 1.0 %}
+                                × {{ "%.2f"|format(conflict.relation_weight|default(1.0)) }}
+                            {% endif %}
+                            = {{ "%.2f"|format(conflict.score|default(0)) }}
+                        </div>
+                        {% if conflict.relations %}
+                            <div class="related-factors">
+                                <h4>Faktor Terkait:</h4>
+                                <ul>
+                                    {% for rel in conflict.relations %}
+                                        <li>{{ rel }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if result.solutions %}
+            <div class="solutions-section">
+                <h3>Rekomendasi Solusi</h3>
+                <ul class="solution-list">
+                    {% for solution, score in result.solutions %}
+                        <li class="solution-item">
+                            <div class="solution-text">{{ solution }}</div>
+                            <div class="solution-score">{{ "%.2f"|format(score) }}</div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% if result.relations %}
+            <div class="relations-section">
+                <h3>Hubungan relasi</h3>
+                <ul class="relation-list">
+                    {% for rel, type, score in result.relations %}
+                        <li class="relation-item">
+                            <span class="relation-type {{ type }}">{{ type }}</span>
+                            <span class="relation-content">{{ rel }}</span>
+                            <span class="solution-score">{{ "%.2f"|format(score) }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+
+    </div>
+{% endif %}
+
+    </div>
+
+{% endblock %}
+
+
+

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+    <div>
+        {% for anu in hamzah %}
+            <p style="display: contents;">{{ anu.username }}</p>
+        {% endfor %}
+    </div>
+{% endblock %}

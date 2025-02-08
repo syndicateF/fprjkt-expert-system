@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block title %}Konflik{% endblock %}
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% for fajrin in semua_konflik %}
+        <div class="conflict-wrap">
+            <!-- nama -->
+            <h1 class="conflict-id">#{{ fajrin.id }}</h1>
+            <div class="conflict-content">
+                <div class="conflict-nama-wrap">
+                    <div>
+                        <strong>Jenis :</strong>
+                        <span id="conflict-nama-display-{{ fajrin.id }}">{{ fajrin.name }}</span>
+                    </div>
+                    <button type="button" onclick="openEditModal('nama', {{ fajrin.id }})">Edit</button>
+                </div>
+
+
+                <!-- saran -->
+                <div style="justify-content: space-between; display: flex;">
+                    <p>
+                        <strong>Saran :</strong>
+                        <span id="conflict-saran-display-{{ fajrin.id }}">{{ fajrin.saran }}</span>
+                    </p>
+                    <button type="button" onclick="openEditModal('saran', {{ fajrin.id }})">Edit</button>
+                </div>
+
+
+                <!-- example -->
+                <div class="" data-conflict-id="{{ fajrin.id }}">
+                    <div class="example-header">
+                        <strong>Example ({{ fajrin.examples|length }})</strong>
+                        <div>
+                            <button class="btn-add" onclick="openExampleModal('example','new', {{ fajrin.id }})">
+                                + Tambah
+                            </button>
+                            <button class="btn-icon" onclick="toggleList(this, 'example-list-{{ fajrin.id }}')">
+                                <span>▼ Tampilkan</span>
+                            </button>
+                        </div>
+                    </div>
+                    <ul class="collapsible-list example-list" id="example-list-{{ fajrin.id }}">
+                        {% for example in fajrin.examples %}
+                            <li id="example-{{ fajrin.id }}-{{ example.id }}">
+                                <div class="content" id="example-content-{{ fajrin.id }}-{{ example.id }}">
+                                    {{ example.content }}
+                                </div>
+                                <div class="actions">
+                                    <button class="btn-edit" onclick="openExampleModal('example',{{ example.id }}, {{ fajrin.id }})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn-delete"
+                                        onclick="confirmDeleteExample('example',{{ example.id }}, {{ fajrin.id }})">
+                                        🗑️ Hapus
+                                    </button>
+                                </div>
+                            </li>
+                            <!-- modal edit -->
+
+                        {% endfor %}
+                        <!-- modal tambah example -->
+
+                    </ul>
+                </div>
+                <!-- solusi -->
+                <div class="" data-conflict-id="{{ fajrin.id }}">
+                    <div class="solusi-header">
+                        <strong>Solusi ({{ fajrin.solutions|length }})</strong>
+                        <div>
+                            <button class="btn-add" onclick="openExampleModal('solusi','new', {{ fajrin.id }})">
+                                + Tambah
+                            </button>
+                            <button class="btn-icon" onclick="toggleList(this, 'solusi-list-{{ fajrin.id }}')">
+                                <span>▼ Tampilkan</span>
+                            </button>
+                        </div>
+                    </div>
+
+
+                    <ul class="collapsible-list solusi-list" id="solusi-list-{{ fajrin.id }}">
+                        {% for solusi in fajrin.solutions %}
+                            <li id="solusi-{{ fajrin.id }}-{{ solusi.id }}">
+                                <div class="content" id="solusi-content-{{ fajrin.id }}-{{ solusi.id }}">
+                                    {{ solusi.content }}
+                                </div>
+                                <div class="actions">
+                                    <button class="btn-edit" onclick="openExampleModal('solusi',{{ solusi.id }}, {{ fajrin.id }})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn-delete"
+                                        onclick="confirmDeleteExample('solusi',{{ solusi.id }}, {{ fajrin.id }})">
+                                        🗑️ Hapus
+                                    </button>
+                                </div>
+                            </li>
+                            <!-- modal edit solusi -->
+
+                        {% endfor %}
+                        <!-- modal tambah solusi-->
+
+                    </ul>
+                </div>
+                <div>
+                    <!-- relasi -->
+                    {% for relation_type in ['cause', 'depends_on', 'resolve'] %}
+                        <div class="relation-group" data-conflict-id="{{ fajrin.id }}">
+                            <div class="relation-header">
+                                <strong>{{ relation_type.replace('_', ' ').title() }} ({{ fajrin.relations_by_type[relation_type]|length }})</strong>
+                                <div>
+                                    <button class="btn-add" onclick="openExampleModal('{{ relation_type }}','new', {{ fajrin.id }})">
+                                        + Tambah
+                                    </button>
+                                    {% if fajrin.relations_by_type[relation_type] %}
+                                        <button class="btn-icon" onclick="toggleList(this, 'relation-{{ relation_type }}-{{ fajrin.id }}')">
+                                            <span>▼ Tampilkan</span>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if fajrin.relations_by_type[relation_type] %}
+                                <ul class="collapsible-list relation-list" id="relation-{{ relation_type }}-{{ fajrin.id }}">
+                                    {% for relation in fajrin.relations_by_type[relation_type] %}
+                                        <li id="{{ relation_type }}-{{ fajrin.id }}-{{ relation.id }}">
+                                            <div class="content" id="{{ relation_type }}-content-{{ fajrin.id }}-{{ relation.id }}">
+                                                {{ relation.content }}
+                                            </div>
+                                            <div class="actions">
+                                                <button class="btn-edit"
+                                                    onclick="openExampleModal('{{ relation_type }}',{{ relation.id }}, {{ fajrin.id }})">
+                                                    ✏️ Edit
+                                                </button>
+                                                <button class="btn-delete"
+                                                    onclick="confirmDeleteExample('{{ relation_type }}',{{ relation.id }}, {{ fajrin.id }})">
+                                                    🗑️ Hapus
+                                                </button>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            {% include 'modals.html' %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- hapus konf -->
+            <form action="{{ url_for('fprjkt.hapus_konflik', id_konflik=fajrin.id) }}" method="POST">
+                <button type="submit">hapus</button>
+            </form>
+        </div>
+    {% endfor %}
+
+
+    <div id="modal-confirm-cancel" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeConfirmCancelModal()">&times;</span>
+            <h4>Yakin tidak menyimpan perubahan?</h4>
+            <div class="confirm-actions">
+                <button type="button" class="btn-confirm-yes" onclick="confirmCancel()">Ya,
+                    Batalkan</button>
+                <button type="button" class="btn-confirm-no" onclick="closeConfirmCancelModal()">Tetap
+                    Edit</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="global-confirm-modal" class="modal">
+        <div class="modal-content">
+            <p id="confirm-message">I LOVE PDAM</p>
+            <div class="confirm-actions">
+                <button id="confirm-yes" class="btn-confirm-yes">Ya</button>
+                <button id="confirm-no" class="btn-confirm-no">Tidak</button>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

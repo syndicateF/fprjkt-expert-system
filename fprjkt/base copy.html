@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .background {
+            --old-position: {{ old_position }}px;
+            --new-position: {{ new_position }}px;
+            border-radius: 10px;
+            position: absolute;
+            width: 90%;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 30px;
+            animation: move 0.5s ease-in-out forwards;
+        }
+        @keyframes move {
+            from {
+                top: var(--old-position, 0);
+            }
+            to {
+                top: var(--new-position, 0);
+            }
+        }
+        .content {
+            position: relative;
+            overflow-y: auto;
+            padding: 20px;
+            overflow-y: auto;
+            width: 100%;
+            animation: slide-content 0.5s ease-in-out, fade-in 0.5s ease-in-out;;
+        }
+        .content::-webkit-scrollbar {
+            display: none;
+        }
+        @keyframes slide-content {
+            from {
+                transform: translateY(var(--old-content-position, 0));
+            }
+            to {
+                transform: translateY(var(--new-content-position, 0));
+            }
+        }
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+
+
+        .context-box {
+            background: #f0f8ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .entity-tag {
+            background: #e0ffff;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin: 0 2px;
+        }
+        .graph-img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        .confidence-bar {
+            height: 5px;
+            background: #ddd;
+            margin: 5px 0;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: #4CAF50;
+        }
+
+
+    </style>
+    <title>{% block title %}I LOVE PDAM{% endblock %}</title>
+</head>
+<div class="animation-wrapper"></div>
+<body>  
+    <header>
+        <div class="header-background"></div>
+        <div class="header-content">    
+            <p class="kepala-text">what are you looking for?</p>
+            <div style="display: flex;">
+            {% if 'login' in session %}
+                <p class="kepala-text">{{ session['nama_lengkap'] }}</p>
+            {% else %}
+            <div class="login-popup-container">
+                <span class="trigger-popup kepala-text" >Login</span>
+                <div id="login-popup" class="popup">
+                    <div class="popup-content">
+                        <form id="login-form">
+                            <input type="text" name="username" id="username" placeholder="Username" autocomplete="on" required>
+                            <span id="username-error" class="error-message"></span>
+                            <input type="password" name="password" id="password" placeholder="Password" autocomplete="on" required>
+                            <span id="password-error" class="error-message"></span>
+                            <button type="button" onclick="handleLogin()">Login</button>
+                        </form>
+                    </div>
+                    <div class="popup-footer">
+                        <span>Ga punya akun?</span>
+                        <a href="{{ url_for('fprjkt.regis' ) }}">Daftar yuk!</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        
+        </div>
+    </header>
+    <main>
+        <div class="sidebar-content-wrap">
+                <div class="sidebar_wrap">
+                    <div class="background"></div>
+                    <div class="sidebar">
+                        <ul>
+                            <li class="{% if active_page == 'home' %}active{% endif %}">
+                                <a href="/">🏡 Home </a>
+                            </li>
+                            <li class="{% if active_page == 'riwayat' %}active{% endif %}">
+                                <a href="/riwayat">📖 Riwayat</a>
+                            </li>
+                            <li class="{% if active_page == 'regis' %}active{% endif %}">
+                                <a href="/regis">🖊️ Registrasi</a>
+                            </li>
+                            <li class="{% if active_page == 'dashboard' %}active{% endif %}">
+                                <a href="/dashboard">📈 Dashboard</a>
+                            </li>                        
+                            <li class="{% if active_page == 'add_conlict' %}active{% endif %}">
+                                <a href="/add_conlict">📈 add_conlict</a>
+                            </li>                        
+                            <li class="{% if active_page == 'conflicts' %}active{% endif %}">
+                                <a href="/conflicts">📈 konflik</a>
+                            </li>                        
+                        </ul>
+                    </div>  
+                </div>
+            {% if 'login' in session %}
+                <div>
+                    <a class="logout" href="/logout">Logout</a>
+                </div>
+            {% endif %}
+        </div>
+        <div class="content"
+        style="
+        --old-content-position: {{ old_position - new_position }}px;
+        --new-content-position: 0px;
+        ">
+                {% block content %}
+                {% endblock %}
+            </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 Syndicate</p>
+    </footer>
+    <script src="{{ url_for('static', filename='JavaScripts/style.js') }}"></script>
+</body>
+</html>

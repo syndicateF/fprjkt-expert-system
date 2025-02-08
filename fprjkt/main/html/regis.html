@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Registrasi{% endblock %}
+{% block content %}
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+    <div>
+        <form action="/regis" method="POST">
+            <input type="text" name="nama_depan" placeholder="nama depan">
+            <input type="text" name="nama_belakang" placeholder="nama belakang">
+            <input type="text" name="username" placeholder="username">
+            <input type="text" name="password" placeholder="password">
+            <input type="email" name="email" placeholder="email">
+            <button type="submit">GAS</button>
+        </form>
+    </div>
+{% endblock %}
