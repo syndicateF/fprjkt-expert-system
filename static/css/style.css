@@ -1031,17 +1031,16 @@ body footer p{
     margin: 20px 0;
     color: #c8107b;
 }
+
 .relations-section {
-    background: #7d4f56;
+    background-color: rgba(245, 245, 245, 0.7);
     border: 2px solid #ffcdd2;
     padding: 20px;
     border-radius: 8px;
     margin: 20px 0;
-    color: #c8107b;
+    color: #040404;
 }
 .relations-list {
-    background: #ffebee;
-    border: 2px solid #ffcdd2;
     padding: 20px;
     border-radius: 8px;
     margin: 20px 0;
@@ -1061,7 +1060,7 @@ body footer p{
     padding: 20px;
     border-radius: 8px;
     margin: 20px 0;
-    color: #5a0a0a;
+    color: #000000;
 }
 .relations-content {
     background: #ffebee;
@@ -1092,7 +1091,6 @@ body footer p{
 
 
 
-/* Tambahkan di stylesheet Anda */
 .weights-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

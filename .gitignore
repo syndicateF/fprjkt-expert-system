@@ -1,4 +1,6 @@
 v/
+model/
+data_latihan/
 _pycache_
 *.log
 *.pyc
@@ -11,5 +13,7 @@ fprjkt/main/html/conflicts copy.html
 fprjkt/main/html/home copy.html
 fprjkt/main/otak copy.py.txt
 fprjkt/routes copy.py.txt
+fprjkt/kata-dasar.txt
+fprjkt/__init__ copy.py.txt
 static/JavaScripts/style copy.js
 static/css/style copy.css

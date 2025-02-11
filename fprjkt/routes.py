@@ -1,3 +1,4 @@
+
 from flask import render_template, request, flash, redirect, url_for, session, make_response, jsonify
 import matplotlib
 matplotlib.use('Agg')
@@ -25,7 +26,8 @@ def home():
         session['masalah'] = user_input
         try:
             plt.close('all')
-            build_graph(GRAPH_VERSION)
+            db.session.rollback()
+            build_graph()
             
             result = {
                 "input": user_input,
@@ -128,7 +130,10 @@ def home():
                 'relation_weight': c.get('relation_weight', 1.0),
                 'example': c.get('example', ''),
                 'relations': c.get('relations', []),
-                'debug': c.get('debug', {})
+                'debug': {
+                    **c.get('debug', {}),
+                    'semantic_sim': c.get('debug', {}).get('semantic_sim', 0)
+                }
             } for c in top_conflicts if isinstance(c, dict)]
             
             try:
@@ -141,14 +146,14 @@ def home():
             result['log'].update({
                 'processed_input': preprocess_input(user_input),
                 'keywords_found': analysis.get('keywords', []),
-                'total_conflicts': len(detected_conflicts)
+                'action_verbs_detected': analysis.get('debug_info', {}).get('action_verbs_used', [])
             })
             
             plt.close('all')
             return render_with_sidebar('home', result=result,RELATION_WEIGHTS=RELATION_WEIGHTS)
         
-        
         except Exception as e:
+            db.session.rollback()
             print(f"System error: {e}")
             result['error'] = f'Terjadi kesalahan sistem: {str(e)}'
             result['patterns'] = entity_patterns
@@ -161,7 +166,8 @@ def home():
                 patterns=entity_patterns,
                 RELATION_WEIGHTS=RELATION_WEIGHTS
             )
-    
+        finally:
+            db.session.close()
     return render_with_sidebar('home',patterns=entity_patterns,RELATION_WEIGHTS=RELATION_WEIGHTS)
 
 

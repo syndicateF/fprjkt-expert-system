@@ -158,7 +158,22 @@
                             </div>
                             
                             <div class="formula-grid">
-                                <!-- Baris Base Similarity -->
+
+
+                                <div class="formula-row semantic-sim">
+                                    <div class="formula-label">
+                                        Kemiripan Semantik
+                                        <button class="detail-toggle" onclick="toggleDetails('semantic-details')">▼</button>
+                                        <span class="formula-tooltip" title="Kemiripan makna menggunakan model bahasa">
+                                            ℹ️
+                                        </span>
+                                    </div>
+                                    <div class="formula-value">
+                                        {{ "%.2f"|format(conflict.debug.semantic_sim|default(0)) }}
+                                    </div>
+                                </div>
+
+
                                 <div class="formula-row base-sim">
                                     <div class="formula-label">
                                         Kemiripan Dasar
@@ -173,6 +188,17 @@
                                 </div>
                         
                                 <div class="calculation-details" id="base-details">
+
+
+                                    <div class="detail-item">
+                                        <span>Teknologi:</span>
+                                        <code>Gensim Word Vectors (cc.id.300.vec)</code>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span>Skor Semantic:</span>
+                                        {{ "%.2f"|format(conflict.debug.semantic_sim|default(0)) }}
+                                    </div>
+
                                     <div class="detail-item">
                                         <span>Input User:</span>
                                         <code>{{ conflict['debug'].input_tokens|default(['Tidak ada data'], true)|join(', ') }}</code>
@@ -196,7 +222,6 @@
                                     </div>
                                 </div>
                         
-                                <!-- Baris Entity Boost -->
                                 <div class="formula-row entity-boost">
                                     <div class="formula-label">
                                         Bonus Entitas Khusus
@@ -225,7 +250,6 @@
                                     </div>
                                 </div>
                         
-                                <!-- Baris Sub Total -->
                                 <div class="formula-row subtotal">
                                     <div class="formula-label">
                                         Sub Total
@@ -238,7 +262,6 @@
                                     </div>
                                 </div>
                         
-                                <!-- Baris Relation Weight -->
                                 {% if conflict.relation_weight|default(1.0) != 1.0 %}
                                 <div class="formula-row relation-weight">
                                     <div class="formula-label">
@@ -268,8 +291,6 @@
                                     </div>
                                 </div>
                                 {% endif %}
-                        
-                                <!-- Baris Hasil Akhir -->
                                 <div class="formula-row final-score">
                                     <div class="formula-label">
                                         Skor Akhir
@@ -332,6 +353,5 @@
     </div>
 
 {% endblock %}
-
 
 
