@@ -1,21 +1,41 @@
 {% extends 'base.html' %}
 {% block title %}Riwayat{% endblock %}
 {% block content %}
-<div>
-    <div class="riwayat_grid">
-        {% for arya in riwayat %}
-        <div class="riwayat_card">
-            <div class="riwayat_header">
-                <span class="riwayat_id">#{{ arya.id }}</span>
-                <h2 class="riwayat_masalah">{{ arya.masalah }}</h2>
-            </div>
-            <p class="riwayat_solusi">{{ arya.solusi }}</p>
-            <div class="riwayat_footer">
-                <span class="riwayat_kepastian">Kepastian: {{ arya.kepastian }}</span>
-            </div>
+<div class="riwayat-container">
+    <h2>📜 Riwayat Analisis Konflik Anda</h2>
+    
+    {% if riwayat %}
+        <div class="riwayat-list">
+            {% for r in riwayat %}
+                <div class="riwayat-card">
+                    <div class="riwayat-header">
+                        <span class="tanggal">{{ r.tanggal.strftime('%d-%m-%Y %H:%M') }}</span>
+                        <span class="skor">Skor: {{ "%.2f"|format(r.skor_konflik) }}</span>
+                    </div>
+                    
+                    <div class="riwayat-content">
+                        <p><strong>Input Anda:</strong> {{ r.input_text }}</p>
+                        <p><strong>Konflik Terdeteksi:</strong> {{ r.top_konflik }}</p>
+                        
+                        <div class="solusi-section">
+                            <h4>Solusi yang Direkomendasikan:</h4>
+                            <ul>
+                                {% for solusi in r.solusi.split(', ') %}
+                                    <li>{{ solusi }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
+    {% else %}
+        <div class="empty-state">
+            <img src="{{ url_for('static', filename='img/empty-history.png') }}" 
+                 alt="Riwayat Kosong" 
+                 class="empty-image">
+            <p>Belum ada riwayat analisis. Mulai analisis konflik organisasi Anda sekarang!</p>
+        </div>
+    {% endif %}
 </div>
-
 {% endblock %}

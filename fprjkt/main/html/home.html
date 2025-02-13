@@ -99,222 +99,156 @@
 
 
         {% if result.conflicts %}
-
-
-
-        <div class="debug-section">
-            <h3>📊 Berdasarkan dari analisis system</h3>
-            <div class="log-section">
-                <h4>Input yang Diproses:</h4>
-                <p>{{ result.log.processed_input }}</p>
-                
-                <h4>Kata Kunci Terdeteksi:</h4>
-                <div>
-                    {% for keyword in result.log.keywords_found %}
-                    <span class="keyword-tag">{{ keyword }}</span>
-                    {% endfor %}
-                </div>
-                
-                <h4>Kecocokan Dependensi:</h4>
-                <ul>
-                    {% for match in result.log.dependency_matches %}
-                    <li>{{ match }}</li>
-                    {% endfor %}
-                </ul>
-                <h4>Kecocokan Pola:</h4>
-                {% if result and result.log.matched_patterns %}
-                    <div class="matches-section">
-                        <h4>Analisa NER</h4>
-                        
-                        <div class="matches-grid">
-                            {% for entity, label in result.log.matched_patterns %}
-                                <div class="match-card">
-                                    <div class="entity-label">{{ label }}</div>
-                                    <div class="entity-text">{{ entity }}</div>
-                                </div>
-                            {% endfor %}
-                        </div>
+            <div class="debug-section">
+                <h3>📊 Berdasarkan dari analisis system</h3>
+                <div class="log-section">
+                    <h4>Input yang Diproses:</h4>
+                    <p>{{ result.log.processed_input }}</p>
+                    
+                    <h4>Kata Kunci Terdeteksi:</h4>
+                    <div>
+                        {% for keyword in result.log.keywords_found %}
+                        <span class="keyword-tag">{{ keyword }}</span>
+                        {% endfor %}
                     </div>
-                {% endif %}
+                    
+                    <h4>Kecocokan Dependensi:</h4>
+                    <ul>
+                        {% for match in result.log.dependency_matches %}
+                        <li>{{ match }}</li>
+                        {% endfor %}
+                    </ul>
+                    <h4>Kecocokan Pola:</h4>
+                    {% if result and result.log.matched_patterns %}
+                        <div class="matches-section">
+                            <h4>Analisa NER</h4>
+                            
+                            <div class="matches-grid">
+                                {% for entity, label in result.log.matched_patterns %}
+                                    <div class="match-card">
+                                        <div class="entity-label">{{ label }}</div>
+                                        <div class="entity-text">{{ entity }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        </div>
             <div class="conflict-results">
 
                 <h2>Hasil Analisis system</h2>
 
                 {% for conflict in result.conflicts %}
 
-
-
-
+                    <!-- mulai -->
                     <div class="conflict-card">
                         <h3>{{ conflict.name }} <span class="solution-score">{{ "%.2f"|format(conflict.score) }}</span></h3>
+                        
+                        <!-- Analisis Relevansi -->
+                        <div class="relevance-analysis">
+                            <h4>🔍 Alasan Relevansi Input</h4>
+                            <div class="relevance-details">
+                                <p><strong>Kata Kunci Konflik:</strong> 
+                                    {% for keyword in result.log.keywords_found %}
+                                        <span class="keyword-tag">{{ keyword }}</span>
+                                    {% endfor %}
+                                </p>
+                                
+                                <p><strong>Entitas Terdeteksi:</strong>
+                                    {% for entity, label in result.log.matched_patterns %}
+                                        <span class="entity-tag {{ label|lower }}">{{ entity }} ({{ label }})</span>
+                                    {% endfor %}
+                                </p>
+                                
+                                <p><strong>Action Verbs:</strong>
+                                    {% for verb in result.analysis.debug_info.action_verbs_used %}
+                                        <span class="verb-tag">{{ verb }}</span>
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
 
-                            
+                        <!-- Detail Perhitungan -->
                         <div class="calculation-formula">
                             <div class="formula-header">
                                 <span class="formula-icon">🧮</span>
-                                <h4>Rincian Perhitungan Matematis</h4>
+                                <h4>Detail Perhitungan Matematis</h4>
                             </div>
                             
                             <div class="formula-grid">
-
-
-                                <div class="formula-row semantic-sim">
-                                    <div class="formula-label">
-                                        Kemiripan Semantik
-                                        <button class="detail-toggle" onclick="toggleDetails('semantic-details')">▼</button>
-                                        <span class="formula-tooltip" title="Kemiripan makna menggunakan model bahasa">
-                                            ℹ️
-                                        </span>
-                                    </div>
+                                <!-- Baris TF-IDF -->
+                                <div class="formula-row">
+                                    <div class="formula-label">Kemiripan Leksikal (TF-IDF)</div>
+                                    <div class="formula-value">{{ "%.2f"|format(conflict.debug.tfidf_sim) }}</div>
+                                </div>
+                                
+                                <!-- Baris Embedding -->
+                                <div class="formula-row">
+                                    <div class="formula-label">Kemiripan Semantik (Word2Vec)</div>
+                                    <div class="formula-value">{{ "%.2f"|format(conflict.debug.embed_sim) }}</div>
+                                </div>
+                                
+                                <!-- Baris Gabungan -->
+                                <div class="formula-row combined-sim">
+                                    <div class="formula-label">Gabungan Tertimbang</div>
                                     <div class="formula-value">
-                                        {{ "%.2f"|format(conflict.debug.semantic_sim|default(0)) }}
+                                        (0.6 × {{ "%.2f"|format(conflict.debug.tfidf_sim) }}) + 
+                                        (0.4 × {{ "%.2f"|format(conflict.debug.embed_sim) }}) = 
+                                        {{ "%.2f"|format(conflict.debug.enhanced_sim) }}
                                     </div>
                                 </div>
-
-
-                                <div class="formula-row base-sim">
-                                    <div class="formula-label">
-                                        Kemiripan Dasar
-                                        <button class="detail-toggle" onclick="toggleDetails('base-details')">▼</button>
-                                        <span class="formula-tooltip" title="Jumlah kata yang sama dibagi total kata unik">
-                                            ℹ️
-                                        </span>
-                                    </div>
-                                    <div class="formula-value">
-                                        {{ "%.2f"|format(conflict.base_sim|default(0)) }}
-                                    </div>
-                                </div>
-                        
-                                <div class="calculation-details" id="base-details">
-
-
-                                    <div class="detail-item">
-                                        <span>Teknologi:</span>
-                                        <code>Gensim Word Vectors (cc.id.300.vec)</code>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span>Skor Semantic:</span>
-                                        {{ "%.2f"|format(conflict.debug.semantic_sim|default(0)) }}
-                                    </div>
-
-                                    <div class="detail-item">
-                                        <span>Input User:</span>
-                                        <code>{{ conflict['debug'].input_tokens|default(['Tidak ada data'], true)|join(', ') }}</code>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span>Contoh Konflik:</span>
-                                        <code>{{ conflict['debug'].example_tokens|default(['Tidak ada data'], true)|join(', ') }}</code>
-                                    </div>
-                                    <div class="detail-item">
-                                        <span>Kata Sama:</span>
-                                        <code>{{ conflict.debug.matched_tokens|join(', ') }}</code>
-                                        ({{ conflict.debug.matched_count }} kata)
-                                    </div>
-                                    <div class="detail-item">
-                                        <span>Total Kata Unik:</span>
-                                        <code>{{ conflict.debug.total_tokens }}</code>
-                                    </div>
-                                    <div class="detail-item formula">
-                                        {{ conflict.debug.matched_count }} / {{ conflict.debug.total_tokens }} = 
-                                        {{ "%.2f"|format(conflict.base_sim|default(0)) }}
-                                    </div>
-                                </div>
-                        
+                                
+                                <!-- Baris Entitas -->
                                 <div class="formula-row entity-boost">
-                                    <div class="formula-label">
-                                        Bonus Entitas Khusus
-                                        <button class="detail-toggle" onclick="toggleDetails('entity-details')">▼</button>
-                                        <span class="formula-tooltip" title="Entitas penting yang terdeteksi">
-                                            ℹ️
-                                        </span>
-                                    </div>
+                                    <div class="formula-label">Bonus Entitas Khusus</div>
                                     <div class="formula-value">
-                                        + {{ "%.2f"|format(conflict.entity_boost|default(0)) }}
+                                        + ({{ conflict.debug.entity_count }} entitas × 0.3) = 
+                                        {{ "%.2f"|format(conflict.debug.entity_count * 0.3) }}
                                     </div>
                                 </div>
-                        
-                                <div class="calculation-details" id="entity-details">
-                                    <div class="detail-item">
-                                        <span>Entitas Terdeteksi:</span>
-                                        <code>{{ conflict.debug.detected_entities|join(', ') }}</code>
+                                
+                                <!-- Baris Relasi -->
+                                {% if conflict.debug.relation_weight is defined and conflict.debug.relation_weight != 1.0 %}
+                                    <div class="formula-row relation-weight">
+                                        <div class="formula-label">Bobot Relasi ({{ conflict.debug.relation_type }})</div>
+                                        <div class="formula-value">× {{ "%.2f"|format(conflict.debug.relation_weight) }}</div>
                                     </div>
-                                    <div class="detail-item">
-                                        <span>Aturan Bonus:</span>
-                                        Setiap entitas khusus memberikan bonus 0.30
-                                    </div>
-                                    <div class="detail-item formula">
-                                        {{ conflict.debug.entity_count }} entitas × 0.30 = 
-                                        {{ "%.2f"|format(conflict.entity_boost|default(0)) }}
-                                    </div>
-                                </div>
-                        
-                                <div class="formula-row subtotal">
-                                    <div class="formula-label">
-                                        Sub Total
-                                        <span class="formula-tooltip" title="Penjumlahan dasar + bonus">
-                                            ℹ️
-                                        </span>
-                                    </div>
-                                    <div class="formula-value">
-                                        = {{ "%.2f"|format((conflict.base_sim|default(0) + conflict.entity_boost|default(0))|round(2)) }}
-                                    </div>
-                                </div>
-                        
-                                {% if conflict.relation_weight|default(1.0) != 1.0 %}
-                                <div class="formula-row relation-weight">
-                                    <div class="formula-label">
-                                        Bobot Relasi
-                                        <button class="detail-toggle" onclick="toggleDetails('relation-details')">▼</button>
-                                        <span class="formula-tooltip" title="Jenis hubungan yang mempengaruhi skor">
-                                            ℹ️
-                                        </span>
-                                    </div>
-                                    <div class="formula-value">
-                                        × {{ "%.2f"|format(conflict.relation_weight|default(1.0)) }}
-                                    </div>
-                                </div>
-                        
-                                <div class="calculation-details" id="relation-details">
-                                    <div class="detail-item">
-                                        <span>Jenis Relasi:</span>
-                                        {{ conflict['debug'].relation_type|default('Tidak ada relasi') }}
-                                    </div>
-                                    <div class="detail-item">
-                                        <span>Bobot Default:</span>
-                                        1.00
-                                    </div>
-                                    <div class="detail-item">
-                                        <span>Aturan:</span>
-                                        {{ conflict.debug.relation_description }}
-                                    </div>
-                                </div>
                                 {% endif %}
+                                
+                                <!-- Baris Akhir -->
                                 <div class="formula-row final-score">
-                                    <div class="formula-label">
-                                        Skor Akhir
-                                        <span class="formula-tooltip" title="Hasil akhir setelah semua faktor">
-                                            ℹ️
-                                        </span>
-                                    </div>
+                                    <div class="formula-label">Skor Akhir</div>
                                     <div class="formula-value">
-                                        = {{ "%.2f"|format(conflict.score|default(0)) }}
+                                        {% if conflict.debug.relation_weight != 1.0 %}
+                                        ({{ "%.2f"|format(conflict.debug.enhanced_sim) }} + 
+                                        {{ "%.2f"|format(conflict.debug.entity_count * 0.3) }}) × 
+                                        {{ "%.2f"|format(conflict.debug.relation_weight) }} = 
+                                        {% else %}
+                                        {{ "%.2f"|format(conflict.debug.enhanced_sim) }} + 
+                                        {{ "%.2f"|format(conflict.debug.entity_count * 0.3) }} = 
+                                        {% endif %}
+                                        {{ "%.2f"|format(conflict.score) }}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        {% if conflict.relations %}
-                            <div class="related-factors">
-                                <h4>Faktor Terkait:</h4>
-                                <ul>
-                                    {% for rel in conflict.relations %}
-                                        <li>{{ rel }}</li>
+
+                        <!-- Analisis Text -->
+                        <div class="text-analysis">
+                            <h4>📝 Analisis Text</h4>
+                            <div class="analysis-details">
+                                <p><strong>Input Asli:</strong> {{ result.input }}</p>
+                                <p><strong>Input yang Diproses:</strong> {{ result.log.processed_input }}</p>
+                                <p><strong>Pola NER yang Cocok:</strong>
+                                    {% for entity, label in result.log.matched_patterns %}
+                                        <span class="ner-pattern">{{ entity }} ({{ label }})</span>
                                     {% endfor %}
-                                </ul>
+                                </p>
                             </div>
-                        {% endif %}
+                        </div>
                     </div>
+                <!-- selesai -->
                 {% endfor %}
             </div>
         {% endif %}

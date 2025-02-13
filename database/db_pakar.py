@@ -1,4 +1,5 @@
 from database import db
+from datetime import datetime
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -13,10 +14,15 @@ class User(db.Model):
 class Riwayat(db.Model):
     __tablename__ = 'riwayat'
     id = db.Column(db.Integer, primary_key=True)
-    masalah = db.Column(db.Text, nullable=False)
-    solusi = db.Column(db.Text, nullable=False)
-    kepastian = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    input_text = db.Column(db.Text, nullable=False)
+    top_konflik = db.Column(db.String(200))
+    skor_konflik = db.Column(db.Float)
+    solusi = db.Column(db.Text)
+    tanggal = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Riwayat {self.id} - {self.tanggal}>'
 
 class Conflict(db.Model):
     __tablename__ = 'conflicts'

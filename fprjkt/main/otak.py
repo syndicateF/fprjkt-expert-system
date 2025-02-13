@@ -261,8 +261,10 @@ def generate_dynamic_replacements(conflict_examples, model, threshold=0.65):
 def load_seed_action_verbs():
     if not os.path.exists(ACTION_VERBS_SEED_PATH):
         return set()
+    
     with open(ACTION_VERBS_SEED_PATH, "r", encoding="utf-8") as f:
-        return set(line.strip() for line in f.readlines())
+        verbs = set(line.strip() for line in f.readlines())
+        return verbs
 
 def expand_action_verbs(model, seed_verbs, threshold=0.6):
     expanded_verbs = set(seed_verbs)
@@ -314,6 +316,7 @@ def preprocess_input(text):
 
     text = re.sub(r'[^\w\s,.]', '', text)
     text = re.sub(r'\s+', ' ', text).strip().lower()
+
     return text
 
 def enhanced_similarity(text1, text2):
@@ -421,7 +424,11 @@ def get_entity_patterns():
 def analyze_input(user_input):
     cleaned = preprocess_input(user_input)
     doc = nlp(cleaned)
-    
+
+    detected_verbs = []
+    for verb in action_verbs:
+        if re.search(rf'\b{verb}\b', cleaned, re.IGNORECASE):
+            detected_verbs.append(verb)
     conflict_keywords = KONFLIK_KEYWORDS.intersection(cleaned.split())
     has_conflict_keywords = len(conflict_keywords) > 0
     
@@ -455,20 +462,23 @@ def analyze_input(user_input):
             'processed_text': cleaned,
             'expanded_synonyms': expand_synonyms(cleaned),
             'dependency_tree': [(token.text, token.dep_) for token in doc],
-            'action_verbs_used': list(action_verbs)  # Untuk debug
+            'action_verbs_used': detected_verbs  # Untuk debug
         }
     }
 
 def detect_conflicts(user_input):
     cleaned_input = preprocess_input(user_input)
     analysis = analyze_input(cleaned_input)
-    
-    if not analysis['is_relevant']:
+    if not analysis.get('is_relevant', False):
         return []
     
+    # Ambil semua contoh konflik dari database
     all_examples = [example for conflict in Conflict.query.all() for example in conflict.examples]
+    
+    # Hitung similarity antara input dan semua contoh
     similarities = [enhanced_similarity(cleaned_input, example.content) for example in all_examples]
     
+    # Tentukan dynamic threshold berdasarkan statistik similarity
     if similarities:
         mean_sim = np.mean(similarities)
         std_sim = np.std(similarities) if len(similarities) > 1 else 0
@@ -476,13 +486,16 @@ def detect_conflicts(user_input):
     else:
         dynamic_threshold = 0.15
     
+    # Fungsi untuk mendeteksi organisasi dalam teks
     def detect_org(text):
         tokens = text.split()
         org_keywords = {"divisi", "tim", "kelompok"}
         return [f"{tokens[i]}_{tokens[i+1]}" for i in range(len(tokens)-1) if tokens[i] in org_keywords]
     
+    # Deteksi organisasi dalam input
     detected_orgs = detect_org(cleaned_input)
     
+    # Fungsi untuk mendapatkan deskripsi relasi
     def get_relation_description(rel_type):
         descriptions = {
             'cause': 'Hubungan sebab-akibat (+20%)',
@@ -491,55 +504,87 @@ def detect_conflicts(user_input):
         }
         return descriptions.get(rel_type, 'Tidak ada pengaruh')
     
+    # Bangun peta relasi depends-on
     depends_on_map = defaultdict(list)
     for conflict in Conflict.query.all():
         for rel in conflict.relations:
             if rel.type == 'depends-on':
                 depends_on_map[conflict.name].append(rel.content.lower())
     
+    # Cari kecocokan relasi dalam input
     relation_matches = defaultdict(list)
     for conflict, deps in depends_on_map.items():
         for dep in deps:
             if dep in cleaned_input:
                 relation_matches[conflict].append(dep)
     
+    # Inisialisasi list kandidat konflik
     conflicts = Conflict.query.all()
     candidates = []
     
+    # Loop melalui semua konflik
     for conflict in conflicts:
         max_score = 0
         best_example = None
-        debug_info = []
+        debug_info = {
+            'input_tokens': cleaned_input.split(),
+            'example_tokens': [],
+            'tfidf_sim': 0,
+            'embed_sim': 0,
+            'enhanced_sim': 0,
+            'detected_entities': [],
+            'entity_count': 0,
+            'relation_type': None,
+            'relation_weight': 1.0,
+            'relation_description': 'Tidak ada relasi',
+            'dynamic_threshold': dynamic_threshold,
+            'matched_tokens': [],
+            'total_tokens': 0
+        }
         rel_type = 'depends-on' if conflict.name in relation_matches else None
         
+        # Loop melalui semua contoh konflik
         for example in conflict.examples:
-            current_sim = enhanced_similarity(cleaned_input, example.content)
+            # Hitung similarity
+            tfidf_sim = enhanced_similarity(cleaned_input, example.content)
+            embed_sim = semantic_similarity(cleaned_input, example.content)
+            enhanced_sim = enhanced_similarity(cleaned_input, example.content)
             
+            # Deteksi entitas khusus
             special_entities = ['divisi_keuangan', 'divisi_acara', 'kebijakan_baru', 'pembagian_tanggungjawab'] + detected_orgs
             tokens_combined = set(cleaned_input.split() + example.content.split())
             detected_entities = [word for word in special_entities if word in tokens_combined]
             
+            # Hitung bonus entitas
             entity_boost = 0.3 * len(detected_entities)
-            weighted_sim = current_sim + entity_boost
-            
+            weighted_sim = enhanced_sim + entity_boost
+            relation_weight = 1.0
+            # Terapkan bobot relasi jika ada
             if conflict.name in relation_matches:
                 relation_weight = RELATION_WEIGHTS.get("depends-on", 1.0)
                 weighted_sim *= relation_weight
             
+            # Update skor maksimum dan debug info
             if weighted_sim > max_score and weighted_sim > dynamic_threshold:
                 max_score = weighted_sim
                 debug_info = {
                     'input_tokens': cleaned_input.split(),
                     'example_tokens': example.content.split(),
+                    'tfidf_sim': tfidf_sim,
+                    'embed_sim': embed_sim,
+                    'enhanced_sim': enhanced_sim,
                     'detected_entities': detected_entities,
                     'entity_count': len(detected_entities),
-                    'relation_type': rel_type,
+                    'relation_type': rel_type if conflict.name in relation_matches else 'Tidak ada',
+                    'relation_weight': relation_weight,
                     'relation_description': get_relation_description(rel_type) if rel_type else 'Tidak ada relasi',
-                    'semantic_sim': current_sim,
-                    'dynamic_threshold': dynamic_threshold
+                    'dynamic_threshold': dynamic_threshold,
+                    'matched_tokens': list(set(cleaned_input.split()) & set(example.content.split())),
+                    'total_tokens': len(set(cleaned_input.split()) | set(example.content.split()))
                 }
                 best_example = example.content
-
+        
+        # Tambahkan ke kandidat jika melebihi threshold
         if max_score > dynamic_threshold:
             candidates.append({
                 'conflict': conflict,
@@ -548,7 +593,8 @@ def detect_conflicts(user_input):
                 'relations': relation_matches.get(conflict.name, []),
                 'debug': debug_info
             })
-    # sini
+    
+    # Clustering dengan KMeans (opsional)
     input_vector = np.mean(
         [id_model[word].astype(np.float32) for word in cleaned_input.split() if word in id_model],
         axis=0
@@ -579,6 +625,7 @@ def detect_conflicts(user_input):
         except Exception as e:
             print(f"Error in clustering: {str(e)}")
     
+    # Kembalikan kandidat yang sudah diurutkan berdasarkan skor
     return sorted(candidates, key=lambda x: x['score'], reverse=True)
 
 def expand_synonyms(text):

@@ -70,7 +70,7 @@ def home():
                 return render_with_sidebar('home', result=result,RELATION_WEIGHTS=RELATION_WEIGHTS)
             
             detected_conflicts = detect_conflicts(user_input)
-            
+
             if not detected_conflicts:  
                 result['warning'] = {
                     'title': 'Konflik Tidak Ditemukan',
@@ -123,19 +123,40 @@ def home():
             )[:5]
 
             result['conflicts'] = [{
-                'name': c['conflict'].name if isinstance(c, dict) else 'Unknown',
+                'name': c.get('conflict', Conflict(name='Unknown')).name,
                 'score': c.get('score', 0),
-                'base_sim': c.get('base_sim', 0),
-                'entity_boost': c.get('entity_boost', 0),
-                'relation_weight': c.get('relation_weight', 1.0),
-                'example': c.get('example', ''),
-                'relations': c.get('relations', []),
                 'debug': {
-                    **c.get('debug', {}),
-                    'semantic_sim': c.get('debug', {}).get('semantic_sim', 0)
-                }
+                    'tfidf_sim': c.get('debug', {}).get('tfidf_sim', 0),
+                    'embed_sim': c.get('debug', {}).get('embed_sim', 0),
+                    'enhanced_sim': c.get('debug', {}).get('enhanced_sim', 0),
+                    'input_tokens': c.get('debug', {}).get('input_tokens', []),
+                    'example_tokens': c.get('debug', {}).get('example_tokens', []),
+                    'detected_entities': c.get('debug', {}).get('detected_entities', []),
+                    'entity_count': c.get('debug', {}).get('entity_count', 0),
+                    'relation_weight': c.get('debug', {}).get('relation_weight', 1.0),
+                    'relation_type': c.get('debug', {}).get('relation_type', 'Tidak ada'),
+                    'matched_tokens': c.get('debug', {}).get('matched_tokens', []),
+                    'total_tokens': c.get('debug', {}).get('total_tokens', 0)
+                },
+                'relations': c.get('relations', []),
+                'example': c.get('example', '')
             } for c in top_conflicts if isinstance(c, dict)]
-            
+            #x
+            if analysis.get('is_relevant', False) and 'login' in session:
+                top_conflict = result['conflicts'][0] if result['conflicts'] else None
+                solutions_list = [sol[0] for sol in result['solutions']]
+                
+                riwayat_baru = Riwayat(
+                    user_id=session['login'],
+                    input_text=user_input,
+                    top_konflik=top_conflict['name'] if top_conflict else 'Tidak terdeteksi',
+                    skor_konflik=top_conflict['score'] if top_conflict else 0,
+                    solusi=', '.join(solutions_list) if solutions_list else 'Tidak ada solusi'
+                )
+                
+                db.session.add(riwayat_baru)
+                db.session.commit()
+                print(f"✅ Riwayat disimpan untuk user_id: {session['login']}")
             try:
                 generate_graph_image()
                 result['graph_image'] = True
@@ -170,17 +191,24 @@ def home():
             db.session.close()
     return render_with_sidebar('home',patterns=entity_patterns,RELATION_WEIGHTS=RELATION_WEIGHTS)
 
-
 @syndicate.route('/riwayat')
 def riwayat():
     if 'login' not in session:
-        flash('Loginko ko dulu su')
-        return redirect(url_for('fprjkt.rute_login'))
+        flash('Silakan login terlebih dahulu untuk melihat riwayat', 'warning')
+        return redirect(url_for('fprjkt.home'))
     
-    panjultzy = session['login']
-    riwayat = Riwayat.query.filter_by(user_id=panjultzy).all()
-
-    return render_with_sidebar('riwayat', riwayat=riwayat)
+    try:
+        user_id = session['login']
+        
+        riwayat_user = Riwayat.query.filter_by(user_id=user_id)\
+                          .order_by(Riwayat.tanggal.desc())\
+                          .all()
+        
+        return render_with_sidebar('riwayat', riwayat=riwayat_user)
+    
+    except Exception as e:
+        print(f"Error riwayat: {str(e)}")
+        return redirect(url_for('fprjkt.home'))
 
 @syndicate.route('/regis', methods=['POST', 'GET'])
 def regis():
